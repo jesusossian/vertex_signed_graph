@@ -8,9 +8,6 @@ from gurobipy import GRB
 
 import sys
 
-MAX_CPU_TIME = 3600.0
-EPSILON = 1e-6
-
 if __name__ == "__main__":
 
     results_path = Path('results/')
@@ -21,7 +18,8 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("input instance")
     else:
-        instance = sys.argv[1]
+        method = sys.argv[1]
+        instance = sys.argv[2]
     
     data = os.path.join(instance_path,instance)
         
@@ -88,7 +86,10 @@ if __name__ == "__main__":
 
     # model
     model = gp.Model()
-    x = model.addVars(A0,vtype=GRB.BINARY, name="x")
+    if method == "mip":
+        x = model.addVars(A0,vtype=GRB.BINARY,name="x")
+    else:
+        x = model.addVars(A0,lb=0.0,ub=1.0,vtype=GRB.CONTINUOUS,name="x")
     
     #objective
     obj = 0
@@ -128,8 +129,8 @@ if __name__ == "__main__":
     #model.write(instance+"_model.lp")
 
     # parameters 
-    model.setParam(GRB.Param.TimeLimit, MAX_CPU_TIME)
-    model.setParam(GRB.Param.MIPGap, EPSILON)
+    model.setParam(GRB.Param.TimeLimit, 3600.0)
+    model.setParam(GRB.Param.MIPGap, 1.e-6)
     model.setParam(GRB.Param.Threads, 1)
     #model.setParam(GRB.Param.Cuts, -1)
     #model.setParam(GRB.Param.Presolve, -1)
@@ -138,24 +139,31 @@ if __name__ == "__main__":
     model.optimize()
         
     tmp = 0
-    if model.status == GRB.OPTIMAL:
+    if (model.status == GRB.OPTIMAL):
         tmp = 1
  
-    objbound = model.objBound
     objval = model.objVal
-    mipgap = model.MIPGap
+    if method == "mip":
+        objbound = model.objBound 
+        mipgap = model.MIPGap
+        nodecount = model.NodeCount
     runtime = model.Runtime
-    nodecount = model.NodeCount
     status = tmp
         
     # export solution
-    arq = open(os.path.join(results_path,'signed_graph.txt'),'a')
-    arq.write(instance+';'
-	+str(round(objval,2))+';'
-	+str(round(objbound,2))+';'
-	+str(round(mipgap,2))+';'
-	+str(round(runtime,2))+';'
-	+str(round(nodecount,2))+';'
-	+str(round(tmp,2))+'\n')
-
+    if method == "mip":
+        arq = open(os.path.join(results_path,f'{method}_n{n}_signed_graphs.txt'),'a')
+        arq.write(instance+';'
+        +str(round(objval,2))+';'
+        +str(round(objbound,2))+';'
+        +str(round(mipgap,2))+';'
+        +str(round(runtime,2))+';'
+        +str(round(nodecount,2))+';'
+        +str(round(tmp,2))+'\n')
+    else:
+        arq = open(os.path.join(results_path,f'{method}_n{n}_signed_graphs.txt'),'a')
+        arq.write(instance+';'
+        +str(round(objval,2))+';'
+        +str(round(runtime,2))+'\n')
+	
     arq.close()
