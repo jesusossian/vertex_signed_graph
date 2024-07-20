@@ -1,6 +1,6 @@
 #!/bin/bash
 
-method="lp"
+method="mip"
 
 for n in 60
 do
