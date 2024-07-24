@@ -4,7 +4,6 @@ import os
 import networkx as nx
 
 import gurobipy as gp
-from gurobipy import GRB
 
 import sys
 
@@ -87,59 +86,70 @@ if __name__ == "__main__":
     # model
     model = gp.Model()
     if method == "mip":
-        x = model.addVars(A0,vtype=GRB.BINARY,name="x")
+        x = model.addVars(A0,vtype=gp.GRB.BINARY,name="x")
     else:
-        x = model.addVars(A0,lb=0.0,ub=1.0,vtype=GRB.CONTINUOUS,name="x")
+        x = model.addVars(A0,lb=0.0,ub=1.0,vtype=gp.GRB.CONTINUOUS,name="x")
     
     #objective
     obj = 0
     for e in A0:
         obj += 1*x[e]
          
-    model.setObjective(obj, GRB.MAXIMIZE)
+    model.setObjective(obj,gp.GRB.MAXIMIZE)
 
     # constraints
     for j in nodes:
         constr = 0
         for i in O[j]:
             constr += x[(i,j)] 
-        model.addConstr(constr <= 1.0, "constr2")
+        model.addConstr(constr <= 1.0,"constr2")
 
     constr = 0
     for i in nodes:
         constr += x[(i,i)] 
-    model.addConstr(constr <= 2.0, "constr3")
+    model.addConstr(constr <= 2.0,"constr3")
 
     for e in A:
-        model.addConstr(x[(e[0],e[1])] <= x[(e[0],e[0])], "constr4")
+        model.addConstr(x[(e[0],e[1])] <= x[(e[0],e[0])],"constr4")
 
     for e in EN:
         for p in O[e[0]]:
             if p in O[e[1]]:
-                model.addConstr(x[(p,e[0])] + x[(p,e[1])] <= x[(p,p)], "constr5")
+                model.addConstr(x[(p,e[0])] + x[(p,e[1])] <= x[(p,p)],"constr5")
 
+    #for e in EP:
+    #    for p in O[e[0]]:
+    #        M = O[e[1]]
+    #        M = list(set(M) - {p})
+    #        for q in M:
+    #            model.addConstr(x[(p,e[0])] + x[(q,e[1])] <= 1.0,"constr6")
+
+    # ineq of lemma 3.5
     for e in EP:
+        T = list(set(O[e[1]]) - set(O[e[0]]))
+        constr0 = 0
         for p in O[e[0]]:
-            M = O[e[1]]
-            M = list(set(M) - {p})
-            for q in M:
-                model.addConstr(x[(p,e[0])] + x[(q,e[1])] <= 1.0, "constr6")
-                
+            constr0 += x[(p,e[0])]
+        constr1 = 0
+        for p in T:
+            constr1 += x[(p,e[1])]
+        model.addConstr(constr0 + constr1 <= 1.0,"constr9")
+
     # export .lp
     #model.write(instance+"_model.lp")
 
     # parameters 
-    model.setParam(GRB.Param.TimeLimit, 3600.0)
-    model.setParam(GRB.Param.MIPGap, 1.e-6)
-    model.setParam(GRB.Param.Threads, 1)
-    #model.setParam(GRB.Param.Cuts, -1)
-    #model.setParam(GRB.Param.Presolve, -1)
+    model.setParam(gp.GRB.Param.TimeLimit,3600.0)
+    model.setParam(gp.GRB.Param.MIPGap,1.e-6)
+    model.setParam(gp.GRB.Param.Threads,1)
+    #model.setParam(gp.GRB.Param.Cuts,-1)
+    #model.setParam(gp.GRB.Param.Presolve,-1)
 
     # optimize
     model.optimize()
         
     tmp = 0
-    if (model.status == GRB.OPTIMAL):
+    if model.status == gp.GRB.OPTIMAL:
         tmp = 1
  
     objval = model.objVal
@@ -152,7 +162,7 @@ if __name__ == "__main__":
         
     # export solution
     if method == "mip":
-        arq = open(os.path.join(results_path,f'{method}_n{n}_signed_graphs.txt'),'a')
+        arq = open(os.path.join(results_path,f'{method}_n{n}_signed_graphs_ineq9.txt'),'a')
         arq.write(instance+';'
         +str(round(objval,2))+';'
         +str(round(objbound,2))+';'
@@ -161,7 +171,7 @@ if __name__ == "__main__":
         +str(round(nodecount,2))+';'
         +str(round(tmp,2))+'\n')
     else:
-        arq = open(os.path.join(results_path,f'{method}_n{n}_signed_graphs.txt'),'a')
+        arq = open(os.path.join(results_path,f'{method}_n{n}_signed_graphs_ineq9.txt'),'a')
         arq.write(instance+';'
         +str(round(objval,2))+';'
         +str(round(runtime,2))+'\n')
