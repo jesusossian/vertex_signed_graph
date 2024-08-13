@@ -128,16 +128,6 @@ if __name__ == "__main__":
 
     # ineq of lemma 3.5
     for e in EP:
-        T = list(set(O[e[1]]) - set(O[e[0]]))
-        constr0 = 0
-        for p in O[e[0]]:
-            constr0 += x[(p,e[0])]
-        constr1 = 0
-        for p in T:
-            constr1 += x[(p,e[1])]
-        model.addConstr(constr0 + constr1 <= 1.0,"constr9")
-
-    for e in EP:
         S = O[e[0]]
         M = O[e[1]]
         constr0 = 0
