@@ -1,15 +1,13 @@
 from pathlib import Path
 import os
-
 import networkx as nx
-
 import gurobipy as gp
 
 import sys
 
 if __name__ == "__main__":
 
-    results_path = Path('results/')
+    results_path = Path('result/')
     instance_path = Path('data/kmbs/instances/RANDOM')
     out_path = Path('/home/jossian/Downloads/develop/report/signed_graphs')
 
@@ -85,6 +83,11 @@ if __name__ == "__main__":
 
     # model
     model = gp.Model()
+
+    # silent/verbose mode
+    model.Params.OutputFlag = 0 
+    
+    # variables
     if method == "mip":
         x = model.addVars(A0,vtype=gp.GRB.BINARY,name="x")
     else:
@@ -119,8 +122,7 @@ if __name__ == "__main__":
 
     #for e in EP:
     #    for p in O[e[0]]:
-    #        M = O[e[1]]
-    #        M = list(set(M) - {p})
+    #        M = list(set(O[e[1]]) - {p})
     #        for q in M:
     #            model.addConstr(x[(p,e[0])] + x[(q,e[1])] <= 1.0,"constr6")
 
@@ -134,6 +136,17 @@ if __name__ == "__main__":
         for p in T:
             constr1 += x[(p,e[1])]
         model.addConstr(constr0 + constr1 <= 1.0,"constr9")
+
+    for e in EP:
+        S = O[e[0]]
+        M = O[e[1]]
+        constr0 = 0
+        for p in S:
+            constr0 += x[(p,e[0])]
+        constr1 = 0
+        for p in list(set(M) - set(S)):
+            constr1 += x[(p,e[1])]
+        model.addConstr(constr0 + constr1 <= 1.0, "constr9")
 
     # export .lp
     #model.write(instance+"_model.lp")
