@@ -122,21 +122,30 @@ if __name__ == "__main__":
 
     #for e in EP:
     #    for p in O[e[0]]:
-    #        M = list(set(O[e[1]]) - {p})
-    #        for q in M:
+    #        S = list(set(O[e[1]]) - {p})
+    #        for q in S:
     #            model.addConstr(x[(p,e[0])] + x[(q,e[1])] <= 1.0,"constr6")
 
-    # ineq of lemma 3.5
+    # constr6 sum O(i)
     for e in EP:
-        S = O[e[0]]
-        M = O[e[1]]
-        constr0 = 0
-        for p in S:
-            constr0 += x[(p,e[0])]
-        constr1 = 0
-        for p in list(set(M) - set(S)):
-            constr1 += x[(p,e[1])]
-        model.addConstr(constr0 + constr1 <= 1.0, "constr9")
+        for p in O[e[0]]:
+            Cp = list(set(O[e[1]]) - {p})
+            constr1 = 0
+            for q in Cp:
+                constr1 += x[(q,e[1])]
+            model.addConstr(x[(p,e[0])] + constr1 <= 1.0,"constr9")
+
+    # ineq of lemma 3.5
+    #for e in EP:
+    #    S = O[e[0]]
+    #    M = set(O[e[1]]) - set(S)
+    #    constr0 = 0
+    #    for p in S:
+    #        constr0 += x[(p,e[0])]
+    #    constr1 = 0
+    #    for p in M:
+    #        constr1 += x[(p,e[1])]
+    #    model.addConstr(constr0 + constr1 <= 1.0, "constr9")
 
     # export .lp
     #model.write(instance+"_model.lp")
@@ -156,12 +165,14 @@ if __name__ == "__main__":
         tmp = 1
  
     objval = model.objVal
+    runtime = model.Runtime
+    status = tmp
     if method == "mip":
         objbound = model.objBound 
         mipgap = model.MIPGap
         nodecount = model.NodeCount
-    runtime = model.Runtime
-    status = tmp
+
+    model.dispose()
         
     # export solution
     if method == "mip":
