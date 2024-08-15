@@ -1,16 +1,16 @@
 #!/bin/bash
 
-method="mip"
+method="lp"
 
 for n in 60
 do
-    for k in 2 #3 4 5 
+    for k in 2 3 4 5 
     do
         for pos in 30
         do
             for neg in 5
             do
-                for err in 5 #10 20
+                for err in 5 10 20
                 do
                     for id in 1 2 3 4 5
                     do
