@@ -1,6 +1,10 @@
 # signed_graphs
 signed graphs code's
 
+- https://networkx.org/
+
+- https://docs.gurobi.com/projects/optimizer/en/current/reference/python.html
+
 - https://jump.dev/JuMP.jl/stable/
 
 - https://juliagraphs.org/Graphs.jl/stable/
